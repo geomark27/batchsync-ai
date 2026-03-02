@@ -1,6 +1,6 @@
 # TECHNICAL.md — BatchSync AI
 
-_Última actualización: 2026-03-01_
+_Última actualización: 2026-03-01 — Sprint 1 completado_
 
 ---
 
@@ -10,12 +10,12 @@ _Última actualización: 2026-03-01_
 | :---- | :---- | :---- |
 | Lenguaje | Go | 1.25.4 |
 | Base de datos | Microsoft SQL Server | <!-- TODO: verificar versión --> |
-| Driver SQL Server | github.com/microsoft/go-mssqldb | <!-- TODO: verificar tras `go get` --> |
+| Driver SQL Server | github.com/microsoft/go-mssqldb | v1.9.7 |
 | SDK IA | google.golang.org/genai | <!-- TODO: verificar tras `go get` --> |
 | Rate limiting | golang.org/x/time/rate | <!-- TODO: pendiente de agregar --> |
 | Telemetría | go.opentelemetry.io/otel | <!-- TODO: pendiente de agregar --> |
 
-> El `go.mod` actual solo declara `module batchsync-ai` y `go 1.25.4`. Las dependencias se agregarán conforme avance la implementación.
+> `go-mssqldb` v1.9.7 fue agregado en Sprint 1. Las dependencias de IA y telemetría se agregarán en sprints subsiguientes.
 
 ---
 
@@ -24,8 +24,9 @@ _Última actualización: 2026-03-01_
 ```
 batchsync-ai/
 ├── cmd/                    # Entrypoints (binarios compilables)
-│   └── batchsync/          # main.go — punto de entrada principal <!-- TODO: crear -->
+│   └── batchsync/          # main.go — punto de entrada principal
 ├── internal/               # Paquetes internos (no importables externamente)
+│   ├── config/             # Lectura y validación de variables de entorno
 │   ├── database/           # Pool de conexiones, queries, batch inserts
 │   ├── ai/                 # Cliente Gemini, config structured outputs
 │   ├── processor/          # Goroutine pool, chunking, orquestación del flujo

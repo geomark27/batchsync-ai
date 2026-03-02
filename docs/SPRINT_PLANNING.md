@@ -1,6 +1,6 @@
 # SPRINT_PLANNING.md — BatchSync AI
 
-_Última actualización: 2026-03-01_
+_Última actualización: 2026-03-01 — Sprint 1 completado_
 
 ---
 
@@ -8,27 +8,27 @@ _Última actualización: 2026-03-01_
 
 | Sprint | Nombre | Estado | Avance |
 | :---- | :---- | :---- | ----: |
-| S1 | Infraestructura Base | 🔄 En progreso | 20% |
+| S1 | Infraestructura Base | ✅ Completo | 100% |
 | S2 | Integración IA (Gemini) | ⏳ Pendiente | 0% |
 | S3 | Orquestación y Procesador | ⏳ Pendiente | 0% |
 | S4 | Persistencia y Batching | ⏳ Pendiente | 0% |
 | S5 | Testing y Calidad | ⏳ Pendiente | 0% |
 | S6 | Observabilidad y Despliegue | ⏳ Pendiente | 0% |
-| **Total** | | | **3%** |
+| **Total** | | | **17%** |
 
 ---
 
 ## Sprint 1 — Infraestructura Base
 
-**Estado:** 🔄 En progreso — **20%**
+**Estado:** ✅ Completo — **100%**
 
 | # | Tarea | Estado |
 | :- | :---- | :----: |
 | 1.1 | Inicializar `go.mod` con nombre de módulo | ✅ |
-| 1.2 | Crear estructura de directorios (`cmd/`, `internal/`) | ❌ |
-| 1.3 | Implementar `internal/database/db.go` — `InitDB` con pool config | ❌ |
-| 1.4 | Agregar dependencia `github.com/microsoft/go-mssqldb` | ❌ |
-| 1.5 | Implementar lectura de variables de entorno (conn string) | ❌ |
+| 1.2 | Crear estructura de directorios (`cmd/`, `internal/`) | ✅ |
+| 1.3 | Implementar `internal/database/db.go` — `InitDB` con pool config | ✅ |
+| 1.4 | Agregar dependencia `github.com/microsoft/go-mssqldb` v1.9.7 | ✅ |
+| 1.5 | Implementar `internal/config/config.go` — lectura y validación de env vars | ✅ |
 
 ---
 
