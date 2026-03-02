@@ -1,0 +1,46 @@
+# ─── Binarios compilados ───────────────────────────────────────────────────────
+/batchsync
+/cmd/batchsync/batchsync
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# ─── Artefactos de build y test ────────────────────────────────────────────────
+*.test
+*.out
+/dist/
+/bin/
+
+# ─── Cobertura de tests ────────────────────────────────────────────────────────
+coverage.out
+coverage.html
+
+# ─── Variables de entorno y secretos ──────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+service-account*.json
+
+# ─── Dependencias vendoreadas (opcional, descomentar si se usa go vendor) ──────
+# /vendor/
+
+# ─── Cache de Go ───────────────────────────────────────────────────────────────
+go.sum.bak
+
+# ─── IDEs y editores ───────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ─── Logs y datos temporales ───────────────────────────────────────────────────
+*.log
+/tmp/
+/temp/
