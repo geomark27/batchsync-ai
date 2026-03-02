@@ -1,6 +1,6 @@
 # SPRINT_PLANNING.md — BatchSync AI
 
-_Última actualización: 2026-03-01 — Sprint 1 completado_
+_Última actualización: 2026-03-02 (rev. Sprint 2)_
 
 ---
 
@@ -9,12 +9,12 @@ _Última actualización: 2026-03-01 — Sprint 1 completado_
 | Sprint | Nombre | Estado | Avance |
 | :---- | :---- | :---- | ----: |
 | S1 | Infraestructura Base | ✅ Completo | 100% |
-| S2 | Integración IA (Gemini) | ⏳ Pendiente | 0% |
+| S2 | Integración IA (Gemini) | ✅ Completo | 100% |
 | S3 | Orquestación y Procesador | ⏳ Pendiente | 0% |
 | S4 | Persistencia y Batching | ⏳ Pendiente | 0% |
 | S5 | Testing y Calidad | ⏳ Pendiente | 0% |
-| S6 | Observabilidad y Despliegue | ⏳ Pendiente | 0% |
-| **Total** | | | **17%** |
+| S6 | Observabilidad y Despliegue | 🔄 En progreso | 20% |
+| **Total** | | | **37%** |
 
 ---
 
@@ -34,15 +34,15 @@ _Última actualización: 2026-03-01 — Sprint 1 completado_
 
 ## Sprint 2 — Integración IA (Gemini)
 
-**Estado:** ⏳ Pendiente — **0%**
+**Estado:** ✅ Completo — **100%**
 
 | # | Tarea | Estado |
 | :- | :---- | :----: |
-| 2.1 | Agregar dependencia `google.golang.org/genai` | ❌ |
-| 2.2 | Implementar `internal/ai/client.go` — `ConfigureGeminiClient` | ❌ |
-| 2.3 | Implementar `GetStructuredConfig` con schema JSON | ❌ |
-| 2.4 | Definir `internal/model/types.go` — `LogEntry`, `ResultadoIA` | ❌ |
-| 2.5 | Test de integración básico: llamada real a Gemini con respuesta JSON | ❌ |
+| 2.1 | Agregar dependencia `google.golang.org/genai` v1.48.0 | ✅ |
+| 2.2 | Implementar `internal/ai/client.go` — `ConfigureGeminiClient(ctx, apiKey)` | ✅ |
+| 2.3 | Implementar `GetStructuredConfig` con schema JSON (`analyze`, `suggested_code`, `criticality`) | ✅ |
+| 2.4 | Definir `internal/model/types.go` — `LogEntry`, `ResultadoIA` | ✅ |
+| 2.5 | Tests en `client_test.go`: validación key vacía + integración con `gemini-2.0-flash` | ✅ |
 
 ---
 
@@ -90,14 +90,14 @@ _Última actualización: 2026-03-01 — Sprint 1 completado_
 
 ## Sprint 6 — Observabilidad y Despliegue
 
-**Estado:** ⏳ Pendiente — **0%**
+**Estado:** 🔄 En progreso — **20%**
 
 | # | Tarea | Estado |
 | :- | :---- | :----: |
 | 6.1 | Implementar `cmd/batchsync/main.go` — entrypoint con flags/env | ❌ |
 | 6.2 | Agregar OpenTelemetry: spans para llamadas a Gemini y SQL Server | ❌ |
 | 6.3 | Crear `Dockerfile` multi-stage con `scratch` final | ❌ |
-| 6.4 | Documentar variables de entorno en `.env.example` | ❌ |
+| 6.4 | Documentar variables de entorno en `.env.example` | ✅ |
 | 6.5 | Configurar CI básico (lint + `go test -race ./...`) | ❌ |
 
 ---

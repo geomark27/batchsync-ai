@@ -1,6 +1,6 @@
 # BUSINESS_LOGIC.md — BatchSync AI
 
-_Última actualización: 2026-03-01_
+_Última actualización: 2026-03-02 (rev. Sprint 2)_
 
 ---
 
@@ -21,7 +21,7 @@ Representa un evento o métrica del sistema fuente (SQL Server). Puede ser un er
 Un conjunto de N registros que se envía en una sola llamada a la API de Gemini. El tamaño del bloque determina el balance entre eficiencia de red y granularidad del análisis.
 
 **ResultadoIA** — Salida estructurada del análisis de Gemini.
-Contiene el análisis textual del bloque, código de remediación sugerido (si aplica), y un nivel de criticidad numérico. Esta entidad es el producto de valor del sistema.
+Contiene el análisis textual (`Analyze`), código de remediación sugerido (`SuggestedCode`, puede estar vacío) y un nivel de criticidad numérico (`Criticality`). Esta entidad es el producto de valor del sistema.
 
 **AnalisisLog** — Registro persistido en SQL Server.
 La materialización de un `ResultadoIA` en la base de datos. Vincula el resultado del análisis con el `LogID` original para trazabilidad.
@@ -48,7 +48,7 @@ Trigger (scheduled / on-demand)
     ▼
 [3] ANÁLISIS IA (PARALELO)
     Enviar cada bloque a Gemini concurrentemente (máx. 50 workers)
-    → Gemini devuelve JSON: { analisis, codigo_sugerido, nivel_criticidad }
+    → Gemini devuelve JSON: { analyze, suggested_code, criticality }
     → Control de cuota: rate limiter en cliente
     │
     ▼
@@ -66,7 +66,7 @@ Trigger (scheduled / on-demand)
 ### Reglas de Negocio
 
 **RN-01: Análisis Estructurado Obligatorio.**
-Toda respuesta de Gemini debe conformarse al schema JSON definido. Respuestas en texto libre no son aceptadas. Si Gemini no puede generar JSON válido, el bloque se marca como fallido.
+Toda respuesta de Gemini debe conformarse al schema JSON `{ analyze: string, suggested_code: string, criticality: integer }`. Respuestas en texto libre no son aceptadas. Si Gemini no puede generar JSON válido, el bloque se marca como fallido.
 
 **RN-02: Trazabilidad por LogID.**
 Cada `ResultadoIA` debe conservar el `LogID` del registro original. Sin esta vinculación, el resultado no tiene valor de negocio y no debe persistirse.
@@ -82,6 +82,9 @@ No más de 50 goroutines concurrentes enviando peticiones a Gemini simultáneame
 
 **RN-06: Criticidad como Señal de Prioridad.**
 El campo `nivel_criticidad` (integer, inferido por Gemini) puede usarse por sistemas consumidores para priorizar remediaciones. El sistema no define el rango ni los umbrales — eso es responsabilidad del consumidor del dato.
+
+**RN-07: Validación de Configuración al Inicio (Fail-Fast).**
+El sistema valida la completitud de la configuración antes de iniciar cualquier procesamiento. `SQLSERVER_CONN_STRING` y `GEMINI_API_KEY` son obligatorias; su ausencia termina el proceso con error. Adicionalmente, se verifica conectividad real a SQL Server mediante `Ping()` en el arranque. Si la base de datos no es alcanzable, el sistema no inicia.
 
 ---
 

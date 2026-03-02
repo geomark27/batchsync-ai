@@ -1,6 +1,6 @@
 # TECHNICAL.md — BatchSync AI
 
-_Última actualización: 2026-03-01 — Sprint 1 completado_
+_Última actualización: 2026-03-02 (rev. Sprint 2)_
 
 ---
 
@@ -8,14 +8,15 @@ _Última actualización: 2026-03-01 — Sprint 1 completado_
 
 | Componente | Tecnología | Versión |
 | :---- | :---- | :---- |
-| Lenguaje | Go | 1.25.4 |
+| Lenguaje | Go | 1.24.0 |
 | Base de datos | Microsoft SQL Server | <!-- TODO: verificar versión --> |
 | Driver SQL Server | github.com/microsoft/go-mssqldb | v1.9.7 |
-| SDK IA | google.golang.org/genai | <!-- TODO: verificar tras `go get` --> |
-| Rate limiting | golang.org/x/time/rate | <!-- TODO: pendiente de agregar --> |
-| Telemetría | go.opentelemetry.io/otel | <!-- TODO: pendiente de agregar --> |
+| SDK IA | google.golang.org/genai | v1.48.0 |
+| Rate limiting | golang.org/x/time/rate | <!-- TODO: pendiente de agregar en Sprint 3 --> |
+| Telemetría | go.opentelemetry.io/otel | <!-- TODO: pendiente de agregar en Sprint 6 --> |
 
-> `go-mssqldb` v1.9.7 fue agregado en Sprint 1. Las dependencias de IA y telemetría se agregarán en sprints subsiguientes.
+> `go-mssqldb` v1.9.7 agregado en Sprint 1. `google.golang.org/genai` v1.48.0 promovido a dependencia directa en Sprint 2. Las dependencias de rate limiting y telemetría se agregarán en sprints subsiguientes.
+> Dependencias indirectas activas: `golang.org/x/crypto` v0.45.0, `golang.org/x/text` v0.31.0, `github.com/shopspring/decimal` v1.4.0, `github.com/google/uuid` v1.6.0.
 
 ---
 
@@ -45,14 +46,46 @@ batchsync-ai/
 
 ## Módulos Internos
 
+### `internal/config`
+
+Lectura, validación y tipado de todas las variables de entorno del sistema.
+
+**Funciones principales:**
+- `Load() (*Config, error)` — Lee env vars, aplica defaults y valida las requeridas. Falla rápido si falta una variable obligatoria.
+
+**Struct `Config`:**
+
+```go
+type Config struct {
+    // SQL Server
+    DBConnString      string        // SQLSERVER_CONN_STRING (requerida)
+    DBMaxOpenConns    int           // DB_MAX_OPEN_CONNS    (default: 50)
+    DBMaxIdleConns    int           // DB_MAX_IDLE_CONNS    (default: 10)
+    DBConnMaxLifetime time.Duration // DB_CONN_MAX_LIFETIME (default: 30m)
+
+    // Google Gemini
+    GeminiAPIKey string // GEMINI_API_KEY (requerida)
+
+    // Parámetros de procesamiento
+    BatchSize  int // BATCH_SIZE   (default: 20)
+    MaxWorkers int // MAX_WORKERS  (default: 50)
+}
+```
+
+**Reglas de validación:**
+- `SQLSERVER_CONN_STRING` y `GEMINI_API_KEY` son obligatorias; ausencia retorna error.
+- `BATCH_SIZE` y `MAX_WORKERS` deben ser `> 0`; valores no parseables usan el default.
+
+---
+
 ### `internal/database`
 
 Responsable de toda interacción con SQL Server.
 
 **Funciones principales:**
-- `InitDB(connString string) (*sql.DB, error)` — Inicializa y configura el pool de conexiones.
-- `GuardarResultadosBatch(db *sql.DB, resultados []ResultadoIA) error` — Divide en chunks de ≤700 filas e inserta en transacciones atómicas.
-- `insertarBatch(db *sql.DB, resultados []ResultadoIA) error` — Ejecuta un INSERT batch con placeholders `@p1..@pN` (sintaxis SQL Server).
+- `InitDB(cfg *config.Config) (*sql.DB, error)` — Inicializa el pool de conexiones con los valores de `cfg`. Ejecuta `Ping()` antes de retornar; si la BD no es alcanzable, cierra la conexión y retorna error.
+- `GuardarResultadosBatch(db *sql.DB, resultados []ResultadoIA) error` — Divide en chunks de ≤700 filas e inserta en transacciones atómicas. <!-- TODO: implementar en Sprint 4 -->
+- `insertarBatch(db *sql.DB, resultados []ResultadoIA) error` — Ejecuta un INSERT batch con placeholders `@p1..@pN` (sintaxis SQL Server). <!-- TODO: implementar en Sprint 4 -->
 
 **Configuración del pool:**
 
@@ -80,18 +113,20 @@ CREATE TABLE AnalisisLogs (
 Responsable de la integración con la API de Google Gemini.
 
 **Funciones principales:**
-- `ConfigureGeminiClient(ctx context.Context) (*genai.Client, error)` — Crea el cliente usando `GEMINI_API_KEY` del entorno.
+- `ConfigureGeminiClient(ctx context.Context, apiKey string) (*genai.Client, error)` — Crea el cliente Gemini con la API key proporcionada. Retorna error si `apiKey` está vacío.
 - `GetStructuredConfig() *genai.GenerateContentConfig` — Retorna la config que fuerza respuesta JSON con schema estricto.
 
 **Schema de respuesta forzada:**
 
 ```json
 {
-  "analisis": "string",
-  "codigo_sugerido": "string",
-  "nivel_criticidad": integer
+  "analyze": "string",
+  "suggested_code": "string",
+  "criticality": integer
 }
 ```
+
+> Los campos del schema usan nombres en inglés (alineados con los structs de `internal/model`). El modelo usado en pruebas de integración es `gemini-2.0-flash`.
 
 **Variables de entorno requeridas:**
 
@@ -127,15 +162,16 @@ Structs compartidos entre paquetes.
 // LogEntry representa un registro fuente a analizar.
 type LogEntry struct {
     ID      int
-    Mensaje string
+    Message string
     // TODO: agregar campos según esquema real de la BD fuente
 }
 
 // ResultadoIA es la salida estructurada de Gemini para un bloque.
 type ResultadoIA struct {
-    LogID      int
-    Analisis   string
-    Criticidad int
+    LogID         int
+    Analyze       string
+    SuggestedCode string
+    Criticality   int
 }
 ```
 
@@ -163,16 +199,23 @@ type ResultadoIA struct {
 
 ## Configuración de Entorno
 
+Ver `.env.example` en la raíz del proyecto para la referencia completa con comentarios.
+
 ```bash
 # SQL Server
 SQLSERVER_CONN_STRING="sqlserver://user:password@host:1433?database=mydb"
 
+# Pool de conexiones (opcionales, tienen defaults)
+DB_MAX_OPEN_CONNS=50        # default: 50
+DB_MAX_IDLE_CONNS=10        # default: 10
+DB_CONN_MAX_LIFETIME=30m    # default: 30m (formato Go: 30m, 1h, etc.)
+
 # Google Gemini
 GEMINI_API_KEY="your-api-key-here"
 
-# Parámetros de procesamiento (opcional, con defaults en código)
-BATCH_SIZE=20           # registros por bloque enviado a Gemini
-MAX_WORKERS=50          # goroutines concurrentes
+# Parámetros de procesamiento (opcionales, tienen defaults)
+BATCH_SIZE=20           # registros por bloque enviado a Gemini (default: 20)
+MAX_WORKERS=50          # goroutines concurrentes (default: 50)
 ```
 
 ---
