@@ -100,9 +100,10 @@ results, err := processor.Run(ctx, geminiClient, entries, processor.Config{
 
 ```sql
 CREATE TABLE AnalisisLogs (
-    LogID      INT           NOT NULL,
-    Analisis   NVARCHAR(MAX) NOT NULL,
-    Criticidad INT           NOT NULL
+    LogID          INT           NOT NULL,
+    Analisis       NVARCHAR(MAX) NOT NULL,
+    CodigoSugerido NVARCHAR(MAX) NOT NULL,
+    Criticidad     INT           NOT NULL
 );
 ```
 

@@ -10,9 +10,9 @@ import (
 // Config agrupa todas las variables de entorno del sistema.
 type Config struct {
 	// SQL Server
-	DBConnString    string
-	DBMaxOpenConns  int           // default: 50
-	DBMaxIdleConns  int           // default: 10
+	DBConnString      string
+	DBMaxOpenConns    int           // default: 50
+	DBMaxIdleConns    int           // default: 10
 	DBConnMaxLifetime time.Duration // default: 30m
 
 	// Google Gemini
@@ -21,6 +21,9 @@ type Config struct {
 	// Parámetros de procesamiento
 	BatchSize  int // registros por bloque enviado a Gemini (default: 20)
 	MaxWorkers int // goroutines concurrentes máximo (default: 50)
+
+	MPPQ int // max parameters per query (go-mssqldb hard limit: 2100)
+	CPR  int // columns per row inserted into AnalisisLogs
 }
 
 // Load lee las variables de entorno y valida las obligatorias.
@@ -34,6 +37,8 @@ func Load() (*Config, error) {
 		GeminiAPIKey:      os.Getenv("GEMINI_API_KEY"),
 		BatchSize:         getEnvInt("BATCH_SIZE", 20),
 		MaxWorkers:        getEnvInt("MAX_WORKERS", 50),
+		MPPQ:              getEnvInt("MAX_PARAMS_PER_QUERY", 2100),
+		CPR:               getEnvInt("COLS_PER_ROW", 4),
 	}
 
 	if err := cfg.validate(); err != nil {
@@ -55,6 +60,12 @@ func (c *Config) validate() error {
 	}
 	if c.MaxWorkers <= 0 {
 		return fmt.Errorf("config: MAX_WORKERS debe ser mayor a 0")
+	}
+	if c.MPPQ <= 0 {
+		return fmt.Errorf("config: MAX_PARAMS_PER_QUERY debe ser mayor a 0")
+	}
+	if c.CPR <= 0 {
+		return fmt.Errorf("config: COLS_PER_ROW debe ser mayor a 0")
 	}
 	return nil
 }

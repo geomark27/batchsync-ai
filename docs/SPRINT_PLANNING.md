@@ -66,11 +66,11 @@ _Última actualización: 2026-03-03 (rev. Sprint 3)_
 
 | # | Tarea | Estado |
 | :- | :---- | :----: |
-| 4.1 | Implementar `internal/database/batch.go` — `insertarBatch` con placeholders `@p1..@pN` | ❌ |
-| 4.2 | Implementar `GuardarResultadosBatch` con chunking automático (≤700 filas) | ❌ |
-| 4.3 | Crear script DDL de tabla `AnalisisLogs` en SQL Server | ❌ |
-| 4.4 | Implementar extracción de `LogEntries` pendientes desde SQL Server | ❌ |
-| 4.5 | Implementar marcado de registros procesados (evitar reprocesamiento) | ❌ |
+| 4.1 | Implementar `internal/database/batch.go` — `insertarBatch` con placeholders `@p1..@pN` | ✅ |
+| 4.2 | Implementar `GuardarResultadosBatch` con chunking automático (≤700 filas) | ✅ |
+| 4.3 | Crear script DDL de tabla `AnalisisLogs` en SQL Server | ✅ |
+| 4.4 | Implementar extracción de `LogEntries` pendientes desde SQL Server | ✅ |
+| 4.5 | Implementar marcado de registros procesados (evitar reprocesamiento) | ✅ |
 
 ---
 
