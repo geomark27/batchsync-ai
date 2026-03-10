@@ -15,6 +15,9 @@ func SaveBatchResult(db *sql.DB, results []model.ResultadoIA, cfg config.Config)
 	}
 
 	maxRowsPerBatch := cfg.MPPQ / cfg.CPR
+	if maxRowsPerBatch <= 0 {
+		return fmt.Errorf("database: invalid batch size derived from MPPQ=%d CPR=%d", cfg.MPPQ, cfg.CPR)
+	}
 
 	for s := 0; s < len(results); s += maxRowsPerBatch {
 
@@ -54,7 +57,7 @@ func insertBatch(db *sql.DB, results []model.ResultadoIA, cfg config.Config) err
 		vals = append(vals, res.LogID, res.Analyze, res.SuggestedCode, res.Criticality)
 	}
 
-	query := "INSERT INTO AnalisisLogs (LogID, Analisis, CodigoSugerido, Criticidad) VALUES " +
+	query := "INSERT INTO AnalisisLogs (LogID, Analysis, SuggestedCode, Criticality) VALUES " +
 		strings.Join(placeholders, ", ")
 
 	if _, err = tx.Exec(query, vals...); err != nil {

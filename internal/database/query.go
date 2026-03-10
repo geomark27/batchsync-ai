@@ -44,7 +44,35 @@ func FetchPendingLogs(db *sql.DB, limit int) ([]model.LogEntry, error) {
 	return entries, nil
 }
 
+// MarkLogsProcessed marks the provided log IDs as processed in chunks that
+// respect the SQL Server parameter limit.
+func MarkLogsProcessed(db *sql.DB, ids []int, maxParamsPerQuery int) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	if maxParamsPerQuery <= 0 {
+		return fmt.Errorf("database: maxParamsPerQuery must be > 0")
+	}
+
+	for start := 0; start < len(ids); start += maxParamsPerQuery {
+		end := start + maxParamsPerQuery
+		if end > len(ids) {
+			end = len(ids)
+		}
+
+		if err := markAsProcessedChunk(db, ids[start:end]); err != nil {
+			return fmt.Errorf("database: mark processed chunk [%d:%d]: %w", start, end, err)
+		}
+	}
+
+	return nil
+}
+
 func markAsProcessedChunk(db *sql.DB, ids []int) error {
+	if len(ids) == 0 {
+		return nil
+	}
+
 	placeHolders := make([]string, len(ids))
 	args := make([]interface{}, len(ids))
 
@@ -59,7 +87,7 @@ func markAsProcessedChunk(db *sql.DB, ids []int) error {
 	)
 
 	if _, err := db.Exec(query, args...); err != nil {
-		return fmt.Errorf("database: mark as processd: %w", err)
+		return fmt.Errorf("database: mark as processed: %w", err)
 	}
 
 	return nil
